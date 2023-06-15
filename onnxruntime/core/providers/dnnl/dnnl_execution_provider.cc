@@ -69,8 +69,8 @@ DnnlExecutionProvider::DnnlExecutionProvider(const DnnlExecutionProviderInfo& in
   // Set the number of threads specified by the user
   // If provided arguments set them as the number of threads, else call
   // calc which usually = numcores
-  auto num_threads = static_cast<int*>(info.threadpool_args);
 #if defined(DNNL_OPENMP)
+	auto num_threads = static_cast<int*>(info.threadpool_args);
   // On Java we have limitations to the number of threads so let OpenMP decide
 #if !defined(DNNL_JAVA)
   // If the user provided a value select between 3 cases

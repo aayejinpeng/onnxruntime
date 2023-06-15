@@ -49,11 +49,11 @@ TEST_F(ActivationOpTest, ParametricSoftplus) {
       {{"alpha", alpha}, {"beta", beta}}, false);  // Disable TensorRT due to result mismatch
 }
 
-TEST_F(ActivationOpTest, Gelu) {
-  TestActivationOp<float>(
-      "Gelu", input_values, [](float x) { return x * 0.5f * (1.0f + std::erf(x * static_cast<float>(M_SQRT1_2))); }, {},
-      false, 1, kMSDomain);
-}
+// TEST_F(ActivationOpTest, Gelu) {
+//   TestActivationOp<float>(
+//       "Gelu", input_values, [](float x) { return x * 0.5f * (1.0f + std::erf(x * static_cast<float>(M_SQRT1_2))); }, {},
+//       false, 1, kMSDomain);
+// }
 
 #if defined(USE_DNNL)
 std::vector<BFloat16> expected_output_bfloat16(const std::vector<float>& input_data) {

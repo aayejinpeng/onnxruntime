@@ -1,8 +1,8 @@
 include (ExternalProject)
 
-set(DNNL_URL https://github.com/oneapi-src/onednn.git)
+set(DNNL_URL https://github.com/aayejinpeng/oneDNN.git)
 # If DNNL_TAG is updated, check if MKLML_VERSION and platform.cmake.patch need to be updated.
-set(DNNL_TAG v3.0)
+set(DNNL_TAG v3.0-perfinfo)
 
 if(WIN32)
   set(DNNL_SHARED_LIB dnnl.dll)
@@ -12,7 +12,7 @@ else()
     set(DNNL_SHARED_LIB libdnnl.3.dylib)
   else()
     set(DNNL_SHARED_LIB libdnnl.so.3)
-  endif()  
+  endif()
 endif()
 
 if(onnxruntime_USE_DNNL AND onnxruntime_DNNL_GPU_RUNTIME STREQUAL "ocl" AND onnxruntime_DNNL_OPENCL_ROOT STREQUAL "")
@@ -51,7 +51,7 @@ if (onnxruntime_USE_DNNL)
     GIT_TAG ${DNNL_TAG}
     # PATCH_COMMAND ${MKLDNN_PATCH_DISCARD_COMMAND} COMMAND ${DNNL_PATCH_COMMAND}
     SOURCE_DIR ${DNNL_SOURCE}
-    CMAKE_ARGS -DDNNL_BUILD_TESTS=OFF -DDNNL_ENABLE_CONCURRENT_EXEC=ON -DDNNL_BUILD_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${DNNL_INSTALL} ${DNNL_GPU_CMAKE_ARGS}
+    CMAKE_ARGS -DDNNL_BUILD_TESTS=OFF -DDNNL_ENABLE_CONCURRENT_EXEC=ON -DDNNL_BUILD_EXAMPLES=OFF -DDNNL_CPU_RUNTIME=SEQ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${DNNL_INSTALL} ${DNNL_GPU_CMAKE_ARGS}
   )
   link_directories(${DNNL_LIB_DIR})
 endif()
