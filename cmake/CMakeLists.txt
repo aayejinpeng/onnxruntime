@@ -1080,7 +1080,7 @@ endif()
 
 if (onnxruntime_USE_DNNL)
   include(dnnl)
-#  add_compile_definitions(DNNL_OPENMP)
+  add_compile_definitions(DNNL_OPENMP)
 endif()
 
 # TVM EP
