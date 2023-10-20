@@ -31,7 +31,8 @@ def preprocess(img):
 
 def predict(model_path, label_path, img_path):
     model = onnx.load(model_path)
-    session = ort.InferenceSession(model.SerializeToString(),providers=['DnnlExecutionProvider'])
+    #provider_options ,num_threads=32
+    session = ort.InferenceSession(model.SerializeToString(),providers=['DnnlExecutionProvider'],provider_options=[{'execution_frame':'dnnl','execution_mode':'parallel','execution_threads':32}])
 
     with open(label_path, 'r') as f:
         labels = [l.rstrip() for l in f]

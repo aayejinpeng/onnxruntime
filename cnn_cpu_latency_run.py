@@ -32,63 +32,36 @@ def preprocess(img):
     img = np.expand_dims(img, axis=0)
     return img
 
-def predict(model_path, label_path, img_path):
+def predict(model_path, label_path, img_path, batch_size, thread_num):
     model = onnx.load(model_path)
     model = version_converter.convert_version(model, 19)
-    # print(model.graph.input)
-    #print model lines
-    # print(model.graph.node)
-    # print(onnx.printer.to_text(model.graph))
-    # for node in model.graph.input:
-    #     if node.name == 'gpu_0/pred_1':
-    #         print(node)
-    # for weight in model.graph.initializer:
-    #     if weight.name == 'OC2_DUMMY_1':
-    #         weight.CopyFrom(numpy_helper.from_array(np.array([-1,2048], dtype=int),'OC2_DUMMY_1'))
-    #         print(numpy_helper.to_array(weight))
 
-    
-    # return
     for node in model.graph.node:
         if node.op_type == 'Reshape':
             print(node)
             node.op_type = 'Flatten'
             node.input.remove('OC2_DUMMY_1')
-    # print(model.graph.node)
-    # print(model.graph.output)
-    # print(model.graph.input[0].type.tensor_type.shape.dim)
-    # print(model.graph.output[0].type.tensor_type.shape.dim)
     model.graph.output[0].type.tensor_type.shape.dim[0].dim_param = 'N'
-    # print(model.graph.input[0])
     for i in range(len(model.graph.value_info)):
         vi = model.graph.value_info[i]
         if vi.type.tensor_type.shape.dim[0].dim_value == 1:
             vi.type.tensor_type.shape.dim[0].dim_param = 'N'
     model = shape_inference.infer_shapes(model)
-    print(model.graph.value_info)
-    # print(model.graph.output)
-    # return
+    # print(model.graph.value_info)
 
-
-    onnx.save_model(model, "infered_test_net.onnx")
-    # print(model.graph.node)
-    
-    # print(model)
-    # return
     sess_options = ort.SessionOptions()
-    # sess_options.num_of_threads=32
+
     sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-    # ort.provider
-    session = ort.InferenceSession(model.SerializeToString(),providers=['DnnlExecutionProvider'],provider_options=[{'num_of_threads':64}])
     
-    # return
+    session = ort.InferenceSession(model.SerializeToString(),providers=['DnnlExecutionProvider'],provider_options=[{'num_of_threads':thread_num}])
+    
     with open(label_path, 'r') as f:
         labels = [l.rstrip() for l in f]
 
     img = get_image(img_path, show=False)
     img = preprocess(img)
-    #copy imges 1024 times
-    img = np.tile(img, (4, 1, 1, 1))
+    
+    img = np.tile(img, (batch_size, 1, 1, 1))
     print(img.shape)
     print(session.get_inputs()[0].name)
     ort_inputs = {session.get_inputs()[0].name: img}
@@ -104,16 +77,27 @@ def predict(model_path, label_path, img_path):
         times.append(end-start)
     times.sort()
     print(times)
-    # preds = np.squeeze(preds[0])
-    # a = np.argsort(preds)[::-1]
-    # print('class=%s ; probability=%f' %(labels[a[0]],preds[a[0]]))
 
-if len(sys.argv) != 4:
-    print("Usage: python script.py model_path label_path img_path")
+    #90% average time
+    print('90% average time: ', np.mean(times[0:921]))
+    #90% average time, per batch
+    print('90% average time, per batch: ', np.mean(times[0:921])/batch_size)
+    #99% average time
+    print('99% average time: ', np.mean(times[0:1010]))
+    #99% average time, per batch
+    print('99% average time, per batch: ', np.mean(times[0:1010])/batch_size)
+    #top 1 time
+    print('top 1 time: ', times[0])
+
+
+if len(sys.argv) != 6:
+    print("Usage: python script.py model_path label_path img_path batch_size thread_num")
     sys.exit(1)
 
 model_path = sys.argv[1]
 label_path = sys.argv[2]
 img_path = sys.argv[3]
+batch_size = int(sys.argv[4])
+thread_num = int(sys.argv[5])
 
-predict(model_path, label_path, img_path)
+predict(model_path, label_path, img_path, batch_size, thread_num)
